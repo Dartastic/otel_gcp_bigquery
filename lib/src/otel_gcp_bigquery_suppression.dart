@@ -12,4 +12,5 @@ T runWithoutGcpBigQueryInstrumentation<T>(T Function() body) =>
 
 Future<T> runWithoutGcpBigQueryInstrumentationAsync<T>(
   Future<T> Function() body,
-) => runZoned(body, zoneValues: {_key: true});
+) =>
+    runZoned(body, zoneValues: {_key: true});
