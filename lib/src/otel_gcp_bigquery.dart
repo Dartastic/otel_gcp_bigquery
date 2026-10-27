@@ -1,11 +1,12 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_gcp_bigquery_suppression.dart';
 
 class GcpBigQueryResult {
+  /// Creates a result.
   const GcpBigQueryResult({
     this.project,
     this.dataset,
@@ -39,8 +40,13 @@ class GcpBigQueryResult {
   final String? errorMessage;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class GcpBigQueryCallResult<T> {
+  /// Creates a call result.
   const GcpBigQueryCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final GcpBigQueryResult? result;
 }
@@ -48,86 +54,88 @@ class GcpBigQueryCallResult<T> {
 Future<T> tracedGcpBigQuery<T>({
   required String operation,
   required Future<GcpBigQueryCallResult<T>> Function() invoke,
-  Tracer? tracer,
+  APITracer? tracer,
 }) async {
   if (gcpBigQueryInstrumentationSuppressed()) {
     final r = await invoke();
     return r.value;
   }
-  final t = tracer ?? OTel.tracerProvider().getTracer('otel_gcp_bigquery');
+  final t = tracer ?? OTelAPI.tracerProvider().getTracer('otel_gcp_bigquery');
   final span = t.startSpan('bigquery $operation', kind: SpanKind.client);
   try {
-    span.addAttributes(
-        OTel.attributes([OTel.attributeString('db.system.name', 'bigquery')]));
-    span.addAttributes(
-        OTel.attributes([OTel.attributeString('gcp.service', 'bigquery')]));
+    span.addAttributes(OTelAPI.attributes(
+        [OTelAPI.attributeString('db.system.name', 'bigquery')]));
+    span.addAttributes(OTelAPI.attributes(
+        [OTelAPI.attributeString('gcp.service', 'bigquery')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.project != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('gcp.project.id', res.project!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('gcp.project.id', res.project!)]));
       }
       if (res.dataset != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('db.namespace', res.dataset!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('db.namespace', res.dataset!)]));
       }
       if (res.table != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('db.collection.name', res.table!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('db.collection.name', res.table!)]));
       }
       if (res.jobId != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('gcp.bigquery.job.id', res.jobId!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('gcp.bigquery.job.id', res.jobId!)]));
       }
       if (res.jobType != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('gcp.bigquery.job.type', res.jobType!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('gcp.bigquery.job.type', res.jobType!)]));
       }
       if (res.statementType != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('db.operation.name', res.statementType!)]));
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString('db.operation.name', res.statementType!)
+        ]));
       }
       if (res.bytesProcessed != null) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeInt(
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeInt(
             'gcp.bigquery.bytes_processed',
             res.bytesProcessed!,
           )
         ]));
       }
       if (res.bytesBilled != null) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeInt('gcp.bigquery.bytes_billed', res.bytesBilled!)
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeInt('gcp.bigquery.bytes_billed', res.bytesBilled!)
         ]));
       }
       if (res.totalRows != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeInt('gcp.bigquery.total_rows', res.totalRows!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeInt('gcp.bigquery.total_rows', res.totalRows!)]));
       }
       if (res.rowsAffected != null) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeInt('db.response.returned_rows', res.rowsAffected!)
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeInt('db.response.returned_rows', res.rowsAffected!)
         ]));
       }
       if (res.location != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('cloud.region', res.location!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('cloud.region', res.location!)]));
       }
       if (res.statusCode != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeInt('http.response.status_code', res.statusCode!)
+        ]));
       }
       if (res.errorCode != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('bigquery.error.code', res.errorCode!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('bigquery.error.code', res.errorCode!)]));
       }
       final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeString(
-            ErrorResource.errorType.key,
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString(
+            ErrorAttributes.errorType.key,
             res.errorCode ?? 'bigquery.error',
           )
         ]));
