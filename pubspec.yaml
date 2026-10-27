@@ -2,7 +2,7 @@ name: otel_gcp_bigquery
 description: >-
   OpenTelemetry instrumentation for gcp_bigquery by Dartastic.io. Adds
   standard OpenTelemetry observability to applications that use gcp_bigquery.
-version: 0.1.0
+version: 0.1.1-wip
 repository: https://github.com/dartastic/otel_gcp_bigquery
 homepage: https://dartastic.io
 
